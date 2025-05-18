@@ -4,13 +4,34 @@ const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-app.use(cors({ credentials: true, origin: true }));
+// Ruxsat berilgan frontend domenlari ro'yxati
+const allowedOrigins = [
+  "https://football-frontend-wheat.vercel.app",
+  "https://football-frontend-ilmnur-ea.vercel.app"
+];
 
+// CORS middleware sozlamasi
+app.use(cors({
+  origin: function(origin, callback) {
+    // Postman yoki backenddan keladigan so'rovlar origin bo'lmasligi mumkin
+    if (!origin) return callback(null, true);
 
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `CORS policy: origin ${origin} not allowed`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,  // cookie va auth kerak bo'lsa true
+}));
+
+// API kalit va baza URL
 const API_KEY = process.env.API_KEY;
 const BASE_URL = "https://api.football-data.org/v4";
+
+// Yo‘nalishlar (routes)
 
 app.get("/api/matches", async (req, res) => {
   try {
@@ -82,7 +103,7 @@ app.get("/api/competitions/:code/scorers", async (req, res) => {
   }
 });
 
-
+// Server ishga tushishi
 app.listen(PORT, () => {
   console.log(`✅ Server ishga tushdi: http://localhost:${PORT}`);
 });
